@@ -46,25 +46,49 @@ def search_books(request):
 
  
 
-@api_view(["POST","GET"])
+@api_view(["GET", "POST"])
 def assign_book(request):
-    user_id = request.GET.get("user_id") or request.data.get("user_id")
-    book_id = request.GET.get("book_id") or request.data.get("book_id")
+    # First check GET parameters
+    user_id = request.GET.get("user_id")
+    book_id = request.GET.get("book_id")
 
+    # If not in GET, check POST JSON body
+    if not user_id or not book_id:
+        # Some chatbot platforms wrap parameters inside 'arguments'
+        args = request.data.get("arguments", request.data)
+        user_id = user_id or args.get("user_id")
+        book_id = book_id or args.get("book_id")
+
+    # Validate presence
     if not user_id or not book_id:
         return Response({"error": "user_id and book_id are required"}, status=400)
 
-    user = get_object_or_404(User, id=user_id)
-    book = get_object_or_404(Book, id=book_id)
+    # Convert to integers
+    try:
+        user_id = int(user_id)
+        book_id = int(book_id)
+    except ValueError:
+        return Response({"error": "user_id and book_id must be integers"}, status=400)
 
+    # Get User and Book
+    try:
+        user = User.objects.get(id=user_id)
+        book = Book.objects.get(id=book_id)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+    except Book.DoesNotExist:
+        return Response({"error": "Book not found"}, status=404)
+
+    # Check availability
     if book.number_of_copies <= 0:
         return Response({"error": "No copies available"}, status=400)
 
-    # reduce available copies
+    # Create IssuedBook
+    issued = BookAssignment.objects.create(user=user, book=book)
+
+    # Reduce available copies
     book.number_of_copies -= 1
     book.save()
 
-    # create assignment
-    assignment = BookAssignment.objects.create(user=user, book=book)
-    serializer = BookAssignmentSerializer(assignment)
+    serializer =  BookAssignmentSerializer(issued)
     return Response(serializer.data, status=201)
