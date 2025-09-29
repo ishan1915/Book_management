@@ -97,10 +97,7 @@ def assign_book(request):
 
 @api_view(['POST'])
 def assign_book(request):
-    """
-    POST: Assign a book to a user
-    Body: { "user_id": <int>, "book_id": <int> }
-    """
+    
     user_id = request.data.get('user_id')
     book_id = request.data.get('book_id')
 
