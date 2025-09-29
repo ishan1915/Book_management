@@ -1,9 +1,10 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Book
-from .serializers import BookSerializer
+from .models import *
+from .serializers import *
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 # List all books OR create a new book
 @api_view(["GET"])
@@ -42,17 +43,13 @@ def search_books(request):
 
 
 # views.py
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
-from .models import Book, BookAssignment
-from django.contrib.auth.models import User
-from .serializers import BookAssignmentSerializer
 
-@api_view(["POST"])
+ 
+
+@api_view(["POST","GET"])
 def assign_book(request):
-    user_id = request.data.get("user_id")
-    book_id = request.data.get("book_id")
+    user_id = request.GET.get("user_id") or request.data.get("user_id")
+    book_id = request.GET.get("book_id") or request.data.get("book_id")
 
     if not user_id or not book_id:
         return Response({"error": "user_id and book_id are required"}, status=400)
