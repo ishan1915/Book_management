@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Book
 from .serializers import BookSerializer
+from django.db.models import Q
 
 # List all books OR create a new book
 @api_view(["GET"])
@@ -32,6 +33,6 @@ def search_books(request):
     elif "q" in request.data:
         query = request.data.get("q")
 
-    books = Book.objects.filter(name__icontains=query) | Book.objects.filter(genre__icontains=query)
+    books = Book.objects.filter(Q(name__icontains=query) |   Q(genre__icontains=query))
     serializer = BookSerializer(books, many=True)
     return Response(serializer.data)
