@@ -20,19 +20,54 @@ def book_post(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Search books by name or genre
+ 
 @api_view(["GET", "POST"])
 def search_books(request):
     query = ""
 
-    # check GET param
+     
     if "q" in request.GET:
         query = request.GET.get("q")
 
-    # check JSON body
+    
     elif "q" in request.data:
         query = request.data.get("q")
 
     books = Book.objects.filter(Q(name__icontains=query) |   Q(genre__icontains=query))
     serializer = BookSerializer(books, many=True)
     return Response(serializer.data)
+
+
+
+
+
+# views.py
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from .models import Book, BookAssignment
+from django.contrib.auth.models import User
+from .serializers import BookAssignmentSerializer
+
+@api_view(["POST"])
+def assign_book(request):
+    user_id = request.data.get("user_id")
+    book_id = request.data.get("book_id")
+
+    if not user_id or not book_id:
+        return Response({"error": "user_id and book_id are required"}, status=400)
+
+    user = get_object_or_404(User, id=user_id)
+    book = get_object_or_404(Book, id=book_id)
+
+    if book.number_of_copies <= 0:
+        return Response({"error": "No copies available"}, status=400)
+
+    # reduce available copies
+    book.number_of_copies -= 1
+    book.save()
+
+    # create assignment
+    assignment = BookAssignment.objects.create(user=user, book=book)
+    serializer = BookAssignmentSerializer(assignment)
+    return Response(serializer.data, status=201)

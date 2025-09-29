@@ -10,3 +10,12 @@ class Book(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class BookAssignment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.book.name} → {self.user.username}"
