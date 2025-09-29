@@ -15,7 +15,8 @@ def book_list(request):
 
 @api_view(['POST'])
 def book_post(request):
-    serializer = BookSerializer(data=request.data)
+    data = request.data.get("arguments", request.data)
+    serializer = BookSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
