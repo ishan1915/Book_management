@@ -42,9 +42,9 @@ def search_books(request):
 
 
 
-# views.py
-
  
+
+"""
 
 @api_view(["GET", "POST"])
 def assign_book(request):
@@ -92,3 +92,41 @@ def assign_book(request):
 
     serializer =  BookAssignmentSerializer(issued)
     return Response(serializer.data, status=201)
+"""
+
+
+@api_view(['POST'])
+def assign_book(request):
+    """
+    POST: Assign a book to a user
+    Body: { "user_id": <int>, "book_id": <int> }
+    """
+    user_id = request.data.get('user_id')
+    book_id = request.data.get('book_id')
+
+    if not user_id or not book_id:
+        return Response(
+            {"error": "user_id and book_id are required."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        user = User.objects.get(id=user_id)
+        book = Book.objects.get(id=book_id)
+    except (User.DoesNotExist, Book.DoesNotExist):
+        return Response(
+            {"error": "Invalid user or book ID."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+     
+    assignment = BookAssignment.objects.create(user=user, book=book)
+
+    serializer = BookAssignmentSerializer(assignment)
+    return Response(
+        {
+            "message": "Book assigned successfully!"  ,
+            "data": serializer.data
+        },
+        status=status.HTTP_200_OK
+    )
