@@ -134,18 +134,18 @@ def assign_book(request):
 
 
 
-@api_view(['GET','DELETE'])
+ 
+@api_view(['DELETE','GET'])
 def delete_book(request):
-    query = ""
+    # Try to get the book ID from query parameters first
+    book_id = request.GET.get("q") or request.data.get("q")
 
-     
-    if "q" in request.GET:
-        query = request.GET.get("q")
-
+    if not book_id:
+        return Response({"error": "Book ID is required"}, status=status.HTTP_400_BAD_REQUEST)
     
-    elif "q" in request.data:
-        query = request.data.get("q")
-
-    book= Book.objects.filter(id=query)
-    book.delete()
-    return Response({"msg":"book deleted"},status=status.HTTP_204_NO_CONTENT)
+    try:
+        book = Book.objects.get(id=book_id)
+        book.delete()
+        return Response({"msg": "Book deleted"}, status=status.HTTP_204_NO_CONTENT)
+    except Book.DoesNotExist:
+        return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
