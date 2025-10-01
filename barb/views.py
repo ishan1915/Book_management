@@ -13,6 +13,9 @@ def book_list(request):
     serializer = BookSerializer(books, many=True)
     return Response(serializer.data)
 
+
+
+
 @api_view(['POST'])
 def book_post(request):
     data = request.data.get("arguments", request.data)
@@ -128,3 +131,20 @@ def assign_book(request):
         },
         status=status.HTTP_200_OK
     )
+
+
+@api_view(['DELETE','GET'])
+def delete_book(request, book_id=None):
+    # Support path param /api/books/delete/<id>/ OR ?book_id= in query
+    book_id = book_id or request.GET.get("book_id")
+
+    if not book_id:
+        return Response({"error": "book_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        book = Book.objects.get(id=book_id)
+    except Book.DoesNotExist:
+        return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    book.delete()
+    return Response({"message": f"Book with id {book_id} deleted successfully"}, status=status.HTTP_200_OK)
