@@ -133,33 +133,23 @@ def assign_book(request):
     )
 
 
-@api_view(['DELETE','GET'])
+
+@api_view(['DELETE', 'GET'])
 def delete_book(request):
-    # Default to None
-    book_id = None
-
-    # 1️⃣ Try GET parameter (works in browser)
-    if 'book_id' in request.GET:
-        book_id = request.GET.get("book_id")
-
-    # 2️⃣ Try POST/DELETE body (works for chatbot)
+    book_id = request.GET.get("q")  # book id from query param
+    
     if not book_id:
-        # force DRF to parse DELETE body
-        try:
-            data = request.data
-            # Some chatbots wrap arguments inside 'arguments'
-            if 'arguments' in data:
-                data = data['arguments']
-            book_id = data.get("book_id")
-        except Exception:
-            book_id = None
-
-    if not book_id:
-        return Response({"error": "book_id is required"}, status=400)
-
+        return Response({"error": "Book id (q) is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
     try:
         book = Book.objects.get(id=book_id)
-        book.delete()
-        return Response({"message": f"Book with id {book_id} deleted successfully"}, status=200)
     except Book.DoesNotExist:
-        return Response({"error": "Book not found"}, status=404)
+        return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == "GET":
+        # Just return book details before deletion
+        return Response({"id": book.id})
+    
+    if request.method == "DELETE":
+        book.delete()
+        return Response({"message": f"Book {book_id} deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
