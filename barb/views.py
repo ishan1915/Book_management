@@ -133,16 +133,9 @@ def assign_book(request):
     )
 
 
-
  
-@api_view(['DELETE','GET'])
-def delete_book(request):
-    # Try to get the book ID from query parameters first
-    book_id = request.GET.get("q") or request.data.get("q")
-
-    if not book_id:
-        return Response({"error": "Book ID is required"}, status=status.HTTP_400_BAD_REQUEST)
-    
+@api_view(['DELETE'])
+def delete_book(request, book_id):
     try:
         book = Book.objects.get(id=book_id)
         book.delete()
