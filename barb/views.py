@@ -134,44 +134,18 @@ def assign_book(request):
 
 
 
-@api_view(['GET', 'POST', 'DELETE'])
+@api_view(['GET','DELETE'])
 def delete_book(request):
-    # Try GET query param
-    book_id = request.GET.get("q") or request.GET.get("book_id")
-    
-    # Try POST/DELETE body (chatbot JSON)
-    if not book_id:
-        data = request.data
-        if 'arguments' in data:
-            data = data['arguments']
-        book_id = data.get("q") or data.get("book_id")
-    
-    if not book_id:
-        return Response({"error": "Book id (q) is required"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Convert to int
-    try:
-        book_id = int(book_id)
-    except ValueError:
-        return Response({"error": "Book id must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Fetch book
-    try:
-        book = Book.objects.get(id=book_id)
-    except Book.DoesNotExist:
-        return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
+    query = ""
 
-    if request.method == "GET":
-        # Return book info
-        return Response({
-            "id": book.id,
-            "name": book.name,
-            "author": book.author,
-            "genre": book.genre,
-            "copies": book.number_of_copies
-        })
+     
+    if "q" in request.GET:
+        query = request.GET.get("q")
+
     
-    if request.method in ["DELETE", "POST"]:
-        # Delete the book
-        book.delete()
-        return Response({"message": f"Book {book_id} deleted successfully"}, status=status.HTTP_200_OK)
+    elif "q" in request.data:
+        query = request.data.get("q")
+
+    book= Book.objects.filter(id=query)
+    book.delete()
+    return Response({"msg":"book deleted"},status=status.HTTP_204_NO_CONTENT)
