@@ -45,6 +45,19 @@ def search_books(request):
 
 
 
+@api_view(["GET"])
+def search_book(request):
+    query= ""
+
+    if "q" in request.GET:
+        query = request.GET.get("q")
+
+    
+    elif "q" in request.data:
+        query = request.data.get("q")
+    books=Book.objects.filter(Q(author__icontains=query))
+    serializers=BookSerializer(books,many=True)
+    return Response(serializers.data)
 
  
 
